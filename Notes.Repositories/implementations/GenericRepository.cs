@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Notes.Data;
+using Notes.Repositories.interfaces;
 using System.Linq.Expressions;
-using static Notes.Repositories.interfaces.IGenericRepository;
 
 namespace Notes.Repositories.implementations
 {
