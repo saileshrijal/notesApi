@@ -8,7 +8,7 @@ namespace Notes.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option):base(option)
         {
         }
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<Note> Notes { get; set; }
+        public DbSet<Category> Category { get; set; }
+        public DbSet<Note> Note { get; set; }
     }
 }
