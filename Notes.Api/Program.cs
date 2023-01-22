@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Notes.Data;
+using Notes.Repositories.implementations;
+using Notes.Repositories.interfaces;
 using Notes.Services.implementations;
 using Notes.Services.interfaces;
 
@@ -10,6 +12,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options=> options.UseSqlServ
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<INoteService, NoteService>();
 
 var app = builder.Build();
