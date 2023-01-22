@@ -53,7 +53,7 @@ namespace Notes.Api.Controllers
             if(!ModelState.IsValid) { return BadRequest("some fields are missing"); }
             try
             {
-                var checkCategory = await _categoryService.GetCategoryById(vm.Id);
+                var checkCategory = await _categoryService.GetCategoryById(vm.CategoryId);
                 if (checkCategory == null) { return BadRequest($"Category of Id: {vm.CategoryId} does not exist"); }
                 var note = new Note {
                     Id = vm.Id,
