@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Notes.Data;
+using Notes.Services.implementations;
+using Notes.Services.interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -7,6 +10,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options=> options.UseSqlServ
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<INoteService, NoteService>();
 
 var app = builder.Build();
 
