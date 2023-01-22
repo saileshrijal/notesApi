@@ -11,9 +11,11 @@ namespace Notes.Api.Controllers
     public class NoteController : ControllerBase
     {
         private readonly INoteService _noteService;
-        public NoteController(INoteService  noteService)
+        private readonly ICategoryService _categoryService;
+        public NoteController(INoteService  noteService, ICategoryService categoryService)
         {
-              _noteService= noteService;
+            _noteService= noteService;
+            _categoryService= categoryService;
         }
 
         [HttpGet]
@@ -51,6 +53,8 @@ namespace Notes.Api.Controllers
             if(!ModelState.IsValid) { return BadRequest("some fields are missing"); }
             try
             {
+                var checkCategory = await _categoryService.GetCategoryById(vm.Id);
+                if (checkCategory == null) { return BadRequest($"Category of Id: {vm.CategoryId} does not exist"); }
                 var note = new Note {
                     Id = vm.Id,
                     Title= vm.Title,
@@ -102,11 +106,15 @@ namespace Notes.Api.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
-            var existingNote = await _noteService.GetNoteById(id);
-            if (existingNote == null) { return BadRequest("Notes cannot be found with the id: " + id); }
-            var result = await _noteService.DeleteNotes(id);
-            if (result) { return Ok("Note deleted successfully"); }
-            return BadRequest("Note cannot be deleted");
+            try
+            {
+                var existingNote = await _noteService.GetNoteById(id);
+                if (existingNote == null) { return BadRequest("Notes cannot be found with the id: " + id); }
+                var result = await _noteService.DeleteNotes(id);
+                if (result) { return Ok("Note deleted successfully"); }
+                return BadRequest("Note cannot be deleted");
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
 }

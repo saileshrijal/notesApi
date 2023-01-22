@@ -9,6 +9,7 @@ namespace Notes.ViewModels
         public string? Title { get; set; }
         [Required]
         public string? Description { get; set; }
+        [Required]
         public int CategoryId { get; set; }
         public DateTime CreatedOn { get; set; } = DateTime.Now;
     }
