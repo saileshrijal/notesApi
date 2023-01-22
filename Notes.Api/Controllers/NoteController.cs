@@ -6,7 +6,7 @@ using Notes.ViewModels;
 
 namespace Notes.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class NoteController : ControllerBase
     {
@@ -59,8 +59,8 @@ namespace Notes.Api.Controllers
                     CreatedOn = vm.CreatedOn,
                        
                 };
-                var result = _noteService.AddNotes(note);
-                if (result != null)
+                var result = await _noteService.AddNotes(note);
+                if (result)
                 {
                     return Ok("Notes created successfully");
                 }
@@ -103,7 +103,7 @@ namespace Notes.Api.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var existingNote = await _noteService.GetNoteById(id);
-            if (existingNote == null) { return BadRequest("Notes cannot be found with the id: "+id); }
+            if (existingNote == null) { return BadRequest("Notes cannot be found with the id: " + id); }
             var result = await _noteService.DeleteNotes(id);
             if (result) { return Ok("Note deleted successfully"); }
             return BadRequest("Note cannot be deleted");
