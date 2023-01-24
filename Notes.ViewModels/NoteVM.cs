@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Notes.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Notes.ViewModels
 {
@@ -11,6 +12,7 @@ namespace Notes.ViewModels
         public string? Description { get; set; }
         [Required]
         public int CategoryId { get; set; }
+        public Category? Category { get; set; }
         public DateTime CreatedOn { get; set; } = DateTime.Now;
     }
 }

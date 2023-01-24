@@ -27,6 +27,7 @@ namespace Notes.Api.Controllers
                 Description= x.Description,
                 CategoryId= x.CategoryId,
                 CreatedOn   = x.CreatedOn,
+                Category = x.Category,
             }).ToList();
 
             return Ok(notesListVm); 
