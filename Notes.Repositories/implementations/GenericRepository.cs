@@ -41,7 +41,7 @@ namespace Notes.Repositories.implementations
 
         virtual public async Task<T?> GetBy(Expression<Func<T, bool>> predicate)
         {
-            return await entities.FirstOrDefaultAsync(predicate);
+            return await entities.AsNoTracking().FirstOrDefaultAsync(predicate);
         }
 
         public async Task<List<T>> GetAllBy(Expression<Func<T, bool>> predicate)
