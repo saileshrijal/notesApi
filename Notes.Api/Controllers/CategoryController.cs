@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Notes.Models;
 using Notes.Services.interfaces;
+using Notes.Utilites;
 using Notes.ViewModels;
 
 namespace Notes.Api.Controllers
@@ -17,7 +18,7 @@ namespace Notes.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]int page=1, [FromQuery]int pageSize=10)
         {
             var categories = await _categoryService.GetAllCategories();
             var categoryListVM = categories.Select(x => new CategoryVM()
@@ -27,7 +28,16 @@ namespace Notes.Api.Controllers
                 CreatedOn= x.CreatedOn,
                 Description = x.Description
             }).ToList();//converting list of models to list of viewmodels
-            return Ok(categoryListVM);
+            var totalCount = categoryListVM.Count();
+            var items = categoryListVM.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var pagination = new Pagination<CategoryVM>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                Data = items,
+            };
+            return Ok(pagination);
         }
 
         //get by id

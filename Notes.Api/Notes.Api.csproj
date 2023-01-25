@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Notes.Data\Notes.Data.csproj" />
     <ProjectReference Include="..\Notes.Services\Notes.Services.csproj" />
+    <ProjectReference Include="..\Notes.Utilites\Notes.Utilites.csproj" />
     <ProjectReference Include="..\Notes.ViewModels\Notes.ViewModels.csproj" />
   </ItemGroup>
 
