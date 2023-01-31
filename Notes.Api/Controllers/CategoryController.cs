@@ -1,26 +1,32 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Notes.Models;
 using Notes.Services.interfaces;
 using Notes.Utilites;
 using Notes.ViewModels;
+using System.Security.Claims;
 
 namespace Notes.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[Action]")]
     [ApiController]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
-        public CategoryController(ICategoryService categoryService)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public CategoryController(ICategoryService categoryService, UserManager<ApplicationUser> userManager)
         {
             _categoryService = categoryService;
+            _userManager = userManager;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery]int page=1, [FromQuery]int pageSize=10)
         {
-            var categories = await _categoryService.GetAllCategories();
+            var categories = await _categoryService.GetAllCategories(await LoggedInUserId());
             var categoryListVM = categories.Select(x => new CategoryVM()
             {
                 Id= x.Id,
@@ -44,7 +50,12 @@ namespace Notes.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(int id)
         {
+            
             var category = await _categoryService.GetCategoryById(id);
+            if(await LoggedInUserId() != category.ApplicationUserId)
+            {
+                return BadRequest("You are not authorized");
+            }
             if (category == null) { return BadRequest("Category could not found"); }
             var categoryVM = new CategoryVM()//converting model to viewmodel
             {
@@ -67,7 +78,8 @@ namespace Notes.Api.Controllers
                     Id = vm.Id,
                     Title = vm.Title,
                     Description = vm.Description,
-                    CreatedOn = DateTime.Now
+                    CreatedOn = DateTime.Now,
+                    ApplicationUserId = await LoggedInUserId()
                 };
                 var result = await _categoryService.AddCategory(category);
                 if (result)
@@ -91,6 +103,11 @@ namespace Notes.Api.Controllers
                 if (id != vm.Id) { return BadRequest("Id do not match"); }
                 var existingCategory = await _categoryService.GetCategoryById(id);
                 if(existingCategory == null) { return BadRequest("Category could not found"); }
+
+                if (await LoggedInUserId() != existingCategory.ApplicationUserId)
+                {
+                    return BadRequest("You are not authorized");
+                }
                 existingCategory.Title = vm.Title;
                 existingCategory.Description = vm.Description;
                 existingCategory.CreatedOn = vm.CreatedOn;
@@ -116,7 +133,11 @@ namespace Notes.Api.Controllers
             try
             {
                 var existingCategory = await _categoryService.GetCategoryById(id);
-                if(existingCategory == null) { return BadRequest("Category could not found"); }
+                if (await LoggedInUserId() != existingCategory.ApplicationUserId)
+                {
+                    return BadRequest("You are not authorized");
+                }
+                if (existingCategory == null) { return BadRequest("Category could not found"); }
                 var result = await _categoryService.DeleteCategory(id);
                 if (result)
                 {
@@ -128,6 +149,13 @@ namespace Notes.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        private async Task<string> LoggedInUserId()
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var loggedInUser = await _userManager.FindByNameAsync(username!);
+            return loggedInUser!.Id;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Notes.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Notes.Data;
 using Notes.Models;
 using Notes.Repositories.interfaces;
 using System;

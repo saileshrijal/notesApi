@@ -8,5 +8,7 @@
         public Category? Category { get; set; }
         public int CategoryId { get; set; }
         public DateTime CreatedOn { get; set; }
+        public string? ApplicationUserId { get; set; }
+        public ApplicationUser? ApplicationUser { get; set; }
     }
 }

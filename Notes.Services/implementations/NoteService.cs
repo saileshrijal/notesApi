@@ -32,9 +32,9 @@ namespace Notes.Services.implementations
             return false;
         }
 
-        public async Task<List<Note>> GetAllNotes()
+        public async Task<List<Note>> GetAllNotes(string userId)
         {
-            return await _unitOfWork.NoteRepository.GetAll();
+            return await _unitOfWork.NoteRepository.GetAllBy(x=>x.ApplicationUserId==userId);
         }
 
         public async Task<Note> GetNoteById(int id)

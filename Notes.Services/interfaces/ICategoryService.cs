@@ -14,6 +14,6 @@ namespace Notes.Services.interfaces
         Task<bool> DeleteCategory(int id);
         Task<bool> UpdateCategory(Category category);
         Task<Category> GetCategoryById(int id);
-        Task<List<Category>> GetAllCategories();
+        Task<List<Category>> GetAllCategories(string userId);
     }
 }

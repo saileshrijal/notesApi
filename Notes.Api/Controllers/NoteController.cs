@@ -1,27 +1,33 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Notes.Models;
 using Notes.Services.interfaces;
 using Notes.Utilites;
 using Notes.ViewModels;
+using System.Security.Claims;
 
 namespace Notes.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class NoteController : ControllerBase
     {
         private readonly INoteService _noteService;
         private readonly ICategoryService _categoryService;
-        public NoteController(INoteService  noteService, ICategoryService categoryService)
+        private readonly UserManager<ApplicationUser> _userManager;
+        public NoteController(INoteService  noteService, ICategoryService categoryService, UserManager<ApplicationUser> userManager)
         {
             _noteService= noteService;
             _categoryService= categoryService;
+            _userManager= userManager;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10) {
-            var notes = await _noteService.GetAllNotes();
+            var notes = await _noteService.GetAllNotes(await LoggedInUserId());
             var notesListVm = notes.Select(x => new NoteVM() {
                 Id= x.Id,
                 Title= x.Title,
@@ -44,6 +50,10 @@ namespace Notes.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetById(int id) {
             var note = await _noteService.GetNoteById(id);
+            if (await LoggedInUserId() != note.ApplicationUserId)
+            {
+                return BadRequest("You are not authorized");
+            }
             if (note == null) { return BadRequest("Notes could not be found"); }
 
             var notesListVm = new NoteVM() {
@@ -70,7 +80,8 @@ namespace Notes.Api.Controllers
                     Description= vm.Description,
                     CategoryId= vm.CategoryId,
                     CreatedOn = vm.CreatedOn,
-                       
+                    ApplicationUserId = await LoggedInUserId()
+
                 };
                 var result = await _noteService.AddNotes(note);
                 if (result)
@@ -93,6 +104,10 @@ namespace Notes.Api.Controllers
             {
                 var existingNotes = await _noteService.GetNoteById(id);
                 if (existingNotes == null) { return BadRequest("Notes with the id is not found"); }
+                if (await LoggedInUserId() != existingNotes.ApplicationUserId)
+                {
+                    return BadRequest("You are not authorized");
+                }
                 var note = new Note
                 {
                     Id = vm.Id,
@@ -118,12 +133,23 @@ namespace Notes.Api.Controllers
             try
             {
                 var existingNote = await _noteService.GetNoteById(id);
+                if (await LoggedInUserId() != existingNote.ApplicationUserId)
+                {
+                    return BadRequest("You are not authorized");
+                }
                 if (existingNote == null) { return BadRequest("Notes cannot be found with the id: " + id); }
                 var result = await _noteService.DeleteNotes(id);
                 if (result) { return Ok("Note deleted successfully"); }
                 return BadRequest("Note cannot be deleted");
             }
             catch (Exception ex) { return BadRequest(ex.Message); }
+        }
+
+        private async Task<string> LoggedInUserId()
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var loggedInUser = await _userManager.FindByNameAsync(username!);
+            return loggedInUser!.Id;
         }
     }
 }

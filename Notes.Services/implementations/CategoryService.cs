@@ -39,9 +39,9 @@ namespace Notes.Services.implementations
             return false;
         }
 
-        public async Task<List<Category>> GetAllCategories()
+        public async Task<List<Category>> GetAllCategories(string userId)
         {
-            return await _unitOfWork.CategoryRepository.GetAll();
+            return await _unitOfWork.CategoryRepository.GetAllBy(x=>x.ApplicationUserId==userId);
         }
 
         public async Task<Category> GetCategoryById(int id)

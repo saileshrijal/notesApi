@@ -7,7 +7,7 @@ namespace Notes.Services.interfaces
         Task<bool> DeleteNotes(int id);
         Task<bool> UpdateNotes(Note note);
         Task<Note> GetNoteById(int id);
-        Task <List<Note>> GetAllNotes();
+        Task <List<Note>> GetAllNotes(string userId);
 
     }
 }
