@@ -1,12 +1,13 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Notes.Api.Config;
+using Notes.Config;
+using Notes.Dtos;
 using Notes.Models;
+using Notes.Services.interfaces;
 using Notes.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -20,10 +21,14 @@ namespace Notes.Api.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtConfig _jwtConfig;
-        public UserController(UserManager<ApplicationUser> userManager, IOptionsMonitor<JwtConfig> optionsMonitor)
+        private readonly IAuthService _authService;
+        public UserController(UserManager<ApplicationUser> userManager,
+                                    IOptionsMonitor<JwtConfig> optionsMonitor,
+                                    IAuthService authService)
         {
             _userManager = userManager;
             _jwtConfig = optionsMonitor.CurrentValue;
+            _authService = authService;
         }
 
         [HttpPost]
@@ -33,16 +38,16 @@ namespace Notes.Api.Controllers
             if (!ModelState.IsValid) { return BadRequest("Invalid Payload"); }
             try
             {
-                var existingUser = await _userManager.FindByNameAsync(vm.Username!);
-                if (existingUser == null) { return BadRequest("Invalid Username"); }
-                var checkPassword = await _userManager.CheckPasswordAsync(existingUser, vm.Password!);
-                if (!checkPassword) { return BadRequest("Invalid Username or Password"); }
-                var jwtToken = GenerateToken(existingUser);
-                return Ok(new AuthResult
+                var loginDdto = new LoginDto()
                 {
-                    Token = jwtToken,
-                    Success = true
-                });
+                    Username = vm.Username,
+                    Password = vm.Password,
+                };
+                var authResult = await _authService.Login(loginDdto);
+                if (!authResult.Success) { return BadRequest(authResult.Errors); }
+                var existingUser = await _userManager.FindByNameAsync(vm.Username!);
+                authResult.Token = GenerateToken(existingUser!);
+                return Ok(authResult);
             }
             catch (Exception ex)
             {
@@ -53,45 +58,19 @@ namespace Notes.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegistrationVM vm)
         {
-            // validate
             if (ModelState.IsValid)
             {
-                //check email already exists
-                var existingUser = await _userManager.FindByNameAsync(vm.Username!);
-                if (existingUser != null)
+                var registerDto = new RegisterDto()
                 {
-                    return BadRequest(new AuthResult
-                    {
-                        Success = false,
-                        Errors = new List<string>{
-                            "Email already in use"
-                        }
-                    });
-                }
-                //create user
-                var newUser = new ApplicationUser
-                {
-                    UserName = vm.Username,
-                    FirstName= vm.FirstName,
-                    LastName= vm.LastName,
+                    FirstName = vm.FirstName,
+                    LastName = vm.LastName,
+                    Username = vm.Username
                 };
-                var isCreated = await _userManager.CreateAsync(newUser, vm.Password!);
-                if (isCreated.Succeeded)
-                {
-                    return Ok(new AuthResult
-                    {
-                        Success = true,
-                        Token = GenerateToken(newUser)
-                    });
-                }
-                else
-                {
-                    return BadRequest(new AuthResult
-                    {
-                        Success = false,
-                        Errors = isCreated.Errors.Select(x => x.Description).ToList()
-                    });
-                }
+                var authResult = await _authService.Register(registerDto);
+                if (!authResult.Success) { return BadRequest(authResult.Errors); }
+                var existingUser = await _userManager.FindByNameAsync(vm.Username!);
+                authResult.Token = GenerateToken(existingUser!);
+                return Ok(authResult);
             }
             return BadRequest();
         }

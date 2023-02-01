@@ -1,4 +1,4 @@
-﻿namespace Notes.Api.Config
+﻿namespace Notes.Config
 {
     public class AuthResult
     {
