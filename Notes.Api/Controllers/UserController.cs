@@ -64,7 +64,8 @@ namespace Notes.Api.Controllers
                 {
                     FirstName = vm.FirstName,
                     LastName = vm.LastName,
-                    Username = vm.Username
+                    Username = vm.Username,
+                    Password = vm.Password
                 };
                 var authResult = await _authService.Register(registerDto);
                 if (!authResult.Success) { return BadRequest(authResult.Errors); }
